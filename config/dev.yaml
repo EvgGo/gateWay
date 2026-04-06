@@ -1,0 +1,48 @@
+
+
+jwt_secret: "dsdfwfwrErfg5rujnns"
+
+http_server:
+  address: ${HTTP_ADDRESS}
+  read_timeout: ${HTTP_READ_TIMEOUT}
+  write_timeout: ${HTTP_WRITE_TIMEOUT}
+  idle_timeout: ${HTTP_IDLE_TIMEOUT}
+  read_header_timeout: ${HTTP_READ_HEADER_TIMEOUT}
+  max_header_bytes: ${HTTP_MAX_HEADER_BYTES}
+  request_body_limit: ${HTTP_REQUEST_BODY_LIMIT}
+  keep_alives: ${HTTP_KEEP_ALIVES}
+
+env: ${APP_ENV}
+
+log_file: ${LOG_FILE}
+log_level: ${LOG_LEVEL}
+
+token_options:
+  token_refresh_ttl: ${JWT_REFRESH_TTL}
+  token_access_ttl: ${JWT_ACCESS_TTL}
+  token_verification_ttl: ${JWT_VERIFICATION_TTL}
+
+redis:
+  redis_host: ${REDIS_HOST}
+  redis_port: ${REDIS_PORT}
+  redis_password: ${REDIS_PASSWORD}
+
+mailersend_api_key: ${MAILERSEND_API_KEY}
+hcaptcha_secret: ${HCAPTCHA_SECRET}
+
+auth:
+  host: ${AUTH_GRPC_HOST}
+  port: ${AUTH_GRPC_PORT}
+  timeout: ${AUTH_GRPC_TIMEOUT}
+
+work_space:
+  host: ${WORK_SPACE_GRPC_HOST}
+  port: ${WORK_SPACE_GRPC_PORT}
+  timeout: ${WORK_SPACE_GRPC_TIMEOUT}
+
+dial:
+  attempts: ${DIAL_ATTEMPTS}
+  per_attempt_timeout: ${DIAL_PER_ATTEMPT_TIMEOUT}
+  base_backoff: ${DIAL_BASE_BACKOFF}
+  max_backoff: ${DIAL_MAX_BACKOFF}
+  use_tls: ${DIAL_USE_TLS}
