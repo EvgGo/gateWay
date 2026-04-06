@@ -1,0 +1,6 @@
+package DTO
+
+type LoginJSON struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
