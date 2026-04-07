@@ -164,6 +164,9 @@ func NewRoutes(log *slog.Logger, authClient authv1.AuthClient, profileClient aut
 		r.With(httprate.LimitByIP(120, 1*time.Minute)).
 			Get("/public", projects.ListPublicProjectsHandler(log, workspaceProjectsClient))
 
+		r.With(httprate.LimitByIP(60, 1*time.Minute)).
+			Get("/join-requests/manageable/buckets", projects.ListManageableProjectJoinRequestBucketsHandler(log, workspaceProjectsClient))
+
 		// Project by id
 		r.Route("/{project_id}", func(r chi.Router) {
 			// GetProject
