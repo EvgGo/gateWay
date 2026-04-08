@@ -86,6 +86,8 @@ func NewRoutes(log *slog.Logger, authClient authv1.AuthClient, profileClient aut
 		// Публичные
 		r.With(httprate.LimitByIP(60, 1*time.Minute)).Get("/", profile.ListUsersHandler(log, profileClient))
 		r.With(httprate.LimitByIP(120, 1*time.Minute)).Get("/{user_id}", profile.GetProfileHandler(log, profileClient))
+		r.With(httprate.LimitByIP(60, 1*time.Minute)).
+			Get("/by-ids", profile.GetProfilesByIdsHandler(log, profileClient))
 
 		// Приватные
 		r.Group(func(r chi.Router) {
@@ -165,7 +167,7 @@ func NewRoutes(log *slog.Logger, authClient authv1.AuthClient, profileClient aut
 			Get("/public", projects.ListPublicProjectsHandler(log, workspaceProjectsClient))
 
 		r.With(httprate.LimitByIP(60, 1*time.Minute)).
-			Get("/join-requests/manageable/buckets", projects.ListManageableProjectJoinRequestBucketsHandler(log, workspaceProjectsClient))
+			Get("/join-requests/manageable", projects.ListManageableProjectJoinRequestBucketsHandler(log, workspaceProjectsClient))
 
 		// Project by id
 		r.Route("/{project_id}", func(r chi.Router) {
@@ -216,8 +218,15 @@ func NewRoutes(log *slog.Logger, authClient authv1.AuthClient, profileClient aut
 				r.With(allowJSON, httprate.LimitByIP(20, 1*time.Minute)).
 					Post("/{request_id}/approve", projects.ApproveProjectJoinRequestHandler(log, workspaceProjectsClient))
 
+				r.With(httprate.LimitByIP(60, 1*time.Minute)).
+					Get("/details", projects.ListProjectJoinRequestDetailsHandler(log, workspaceProjectsClient))
+
+				r.With(httprate.LimitByIP(60, 1*time.Minute)).
+					Get("/me", projects.GetMyProjectJoinRequestHandler(log, workspaceProjectsClient))
+
 				r.With(allowJSON, httprate.LimitByIP(20, 1*time.Minute)).
 					Post("/{request_id}/reject", projects.RejectProjectJoinRequestHandler(log, workspaceProjectsClient))
+
 			})
 		})
 	})

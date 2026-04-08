@@ -1,7 +1,6 @@
 package projects
 
 import (
-	"fmt"
 	"gateWay/internal/helpers"
 	"gateWay/pkg/utils"
 	"net/http"
@@ -27,16 +26,18 @@ func ApproveProjectJoinRequestHandler(log *slog.Logger, c workspacev1.ProjectsCl
 			return
 		}
 
+		req.RequestId = requestID
+
 		ctx, cancel := helpers.CtxWithOutgoingMeta(r)
 		defer cancel()
 
 		ctx = helpers.AppendCommonGRPCMetadata(ctx, r)
 
-		log.Debug(fmt.Sprintf("НА ApproveProjectJoinRequest запрос для заявки %v", requestID))
+		log.Debug("НА ApproveProjectJoinRequest запрос", "request_id", requestID)
 
 		resp, err := c.ApproveProjectJoinRequest(ctx, &req)
 		if err != nil {
-			log.Warn("ApproveProjectJoinRequest failed", "err", err)
+			log.Warn("ApproveProjectJoinRequest failed", "err", err, "request_id", requestID)
 			helpers.WriteGRPCError(w, r, err)
 			return
 		}

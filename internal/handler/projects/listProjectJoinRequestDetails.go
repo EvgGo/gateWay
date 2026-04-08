@@ -3,25 +3,30 @@ package projects
 import (
 	"gateWay/internal/helpers"
 	workspacev1 "github.com/EvgGo/proto/proto/gen/go/teamAndProjects"
+	"github.com/go-chi/chi/v5"
 	"log/slog"
 	"net/http"
 	"strings"
 )
 
-func ListManageableProjectJoinRequestBucketsHandler(
+func ListProjectJoinRequestDetailsHandler(
 	log *slog.Logger,
 	c workspacev1.ProjectsClient,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		reqLog := log.With(
-			"handler", "ListManageableProjectJoinRequestBucketsHandler",
+			"handler", "ListProjectJoinRequestDetailsHandler",
 			"http_method", r.Method,
 			"path", r.URL.Path,
 			"raw_query", r.URL.RawQuery,
 		)
 
-		query := strings.TrimSpace(r.URL.Query().Get("query"))
-		pageToken := strings.TrimSpace(r.URL.Query().Get("page_token"))
+		projectID := strings.TrimSpace(chi.URLParam(r, "project_id"))
+		if projectID == "" {
+			reqLog.Warn("Не передан обязательный path-параметр project_id")
+			helpers.WriteAPIError(w, r, http.StatusBadRequest, "project_id is required")
+			return
+		}
 
 		pageSize, err := parsePageSize(r.URL.Query().Get("page_size"), 20)
 		if err != nil {
@@ -30,7 +35,9 @@ func ListManageableProjectJoinRequestBucketsHandler(
 			return
 		}
 
-		statusValue, err := helpers.ParseManageableBucketStatus(r.URL.Query().Get("status"))
+		pageToken := strings.TrimSpace(r.URL.Query().Get("page_token"))
+
+		statusValue, err := helpers.ParseJoinRequestStatusOrAll(r.URL.Query().Get("status"))
 		if err != nil {
 			reqLog.Warn("Некорректный status", "err", err)
 			helpers.WriteAPIError(w, r, http.StatusBadRequest, "invalid status")
@@ -42,30 +49,31 @@ func ListManageableProjectJoinRequestBucketsHandler(
 
 		ctx = helpers.AppendCommonGRPCMetadata(ctx, r)
 
-		reqLog.Info("Получен HTTP-запрос на список управляемых бакетов заявок в проекты",
+		reqLog.Info("Получен HTTP-запрос на список детальных заявок проекта",
+			"project_id", projectID,
 			"status", statusValue.String(),
-			"query", query,
 			"page_size", pageSize,
 			"page_token", pageToken,
 		)
 
-		resp, err := c.ListManageableProjectJoinRequestBuckets(
+		resp, err := c.ListProjectJoinRequestDetails(
 			ctx,
-			&workspacev1.ListManageableProjectJoinRequestBucketsRequest{
+			&workspacev1.ListProjectJoinRequestDetailsRequest{
+				ProjectId: projectID,
 				Status:    statusValue,
-				Query:     query,
 				PageSize:  pageSize,
 				PageToken: pageToken,
 			},
 		)
 		if err != nil {
-			reqLog.Error("Ошибка gRPC ListManageableProjectJoinRequestBuckets", "err", err)
+			reqLog.Error("Ошибка gRPC ListProjectJoinRequestDetails", "err", err)
 			helpers.WriteGRPCError(w, r, err)
 			return
 		}
 
-		reqLog.Info("Список управляемых бакетов заявок успешно получен",
-			"items_count", len(resp.GetItems()),
+		reqLog.Info("Список детальных заявок проекта успешно получен",
+			"project_id", projectID,
+			"requests_count", len(resp.GetRequests()),
 			"next_page_token", resp.GetNextPageToken(),
 		)
 

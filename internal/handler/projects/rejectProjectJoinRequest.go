@@ -28,6 +28,8 @@ func RejectProjectJoinRequestHandler(log *slog.Logger, c workspacev1.ProjectsCli
 			return
 		}
 
+		req.RequestId = requestID
+
 		ctx, cancel := helpers.CtxWithOutgoingMeta(r)
 		defer cancel()
 

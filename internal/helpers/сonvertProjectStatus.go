@@ -85,3 +85,37 @@ func ParseJoinRequestStatusParam(s string) (workspacev1.JoinRequestStatus, error
 		return workspacev1.JoinRequestStatus_JOIN_REQUEST_STATUS_UNSPECIFIED, fmt.Errorf("invalid join request status: %q", s)
 	}
 }
+
+func ParseManageableBucketStatus(raw string) (workspacev1.JoinRequestStatus, error) {
+	switch strings.ToLower(strings.TrimSpace(raw)) {
+	case "", "pending":
+		return workspacev1.JoinRequestStatus_JOIN_REQUEST_STATUS_PENDING, nil
+	case "approved":
+		return workspacev1.JoinRequestStatus_JOIN_REQUEST_STATUS_APPROVED, nil
+	case "rejected":
+		return workspacev1.JoinRequestStatus_JOIN_REQUEST_STATUS_REJECTED, nil
+	case "cancelled":
+		return workspacev1.JoinRequestStatus_JOIN_REQUEST_STATUS_CANCELLED, nil
+	case "unspecified", "all":
+		return workspacev1.JoinRequestStatus_JOIN_REQUEST_STATUS_UNSPECIFIED, nil
+	default:
+		return workspacev1.JoinRequestStatus_JOIN_REQUEST_STATUS_UNSPECIFIED, fmt.Errorf("unknown join request status: %q", raw)
+	}
+}
+
+func ParseJoinRequestStatusOrAll(raw string) (workspacev1.JoinRequestStatus, error) {
+	switch strings.ToLower(strings.TrimSpace(raw)) {
+	case "", "all", "unspecified":
+		return workspacev1.JoinRequestStatus_JOIN_REQUEST_STATUS_UNSPECIFIED, nil
+	case "pending":
+		return workspacev1.JoinRequestStatus_JOIN_REQUEST_STATUS_PENDING, nil
+	case "approved":
+		return workspacev1.JoinRequestStatus_JOIN_REQUEST_STATUS_APPROVED, nil
+	case "rejected":
+		return workspacev1.JoinRequestStatus_JOIN_REQUEST_STATUS_REJECTED, nil
+	case "cancelled":
+		return workspacev1.JoinRequestStatus_JOIN_REQUEST_STATUS_CANCELLED, nil
+	default:
+		return workspacev1.JoinRequestStatus_JOIN_REQUEST_STATUS_UNSPECIFIED, fmt.Errorf("unknown join request status: %q", raw)
+	}
+}
