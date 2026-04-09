@@ -169,6 +169,12 @@ func NewRoutes(log *slog.Logger, authClient authv1.AuthClient, profileClient aut
 		r.With(httprate.LimitByIP(60, 1*time.Minute)).
 			Get("/join-requests/manageable", projects.ListManageableProjectJoinRequestBucketsHandler(log, workspaceProjectsClient))
 
+		r.With(httprate.LimitByIP(60, 1*time.Minute)).
+			Get("/join-requests/me", projects.ListMyProjectJoinRequestsHandler(log, workspaceProjectsClient))
+
+		r.With(httprate.LimitByIP(20, 1*time.Minute)).
+			Post("/join-requests/{request_id}/cancel", projects.CancelJoinProjectHandler(log, workspaceProjectsClient))
+
 		// Project by id
 		r.Route("/{project_id}", func(r chi.Router) {
 			// GetProject
