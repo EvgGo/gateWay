@@ -99,6 +99,11 @@ func NewRoutes(log *slog.Logger, authClient authv1.AuthClient, profileClient aut
 		})
 	})
 
+	r.Route("/profiles", func(r chi.Router) {
+		r.With(httprate.LimitByIP(60, 1*time.Minute)).
+			Get("/candidates", profile.ListPublicCandidatesHandler(log, profileClient))
+	})
+
 	r.Route("/skills", func(r chi.Router) {
 		// Публичные
 		r.With(httprate.LimitByIP(60, 1*time.Minute)).Get("/", profile.ListSkillsHandler(log, skillClient))

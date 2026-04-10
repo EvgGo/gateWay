@@ -3,9 +3,14 @@ package profile
 import (
 	"encoding/json"
 	"fmt"
-	authv1 "github.com/EvgGo/proto/proto/gen/go/sso"
+	ssov1 "github.com/EvgGo/proto/proto/gen/go/sso"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"net/http"
+	"strconv"
 	"strings"
+	"time"
 )
 
 func parseCompetenceLevels(raw json.RawMessage) (map[string]string, error) {
@@ -37,16 +42,15 @@ func parseCompetenceLevels(raw json.RawMessage) (map[string]string, error) {
 	return out, nil
 }
 
-func parseSkillsSelection(raw json.RawMessage) (*authv1.SkillSelection, error) {
+func parseSkillsSelection(raw json.RawMessage) (*ssov1.SkillSelection, error) {
 
 	trimmed := strings.TrimSpace(string(raw))
 
 	// null / пусто => очистить все skills
 	if trimmed == "" || trimmed == "null" {
-		return &authv1.SkillSelection{Ids: []string{}}, nil
+		return &ssov1.SkillSelection{Ids: []string{}}, nil
 	}
 
-	// Разрешаем и bare array: ["1","2"]
 	if strings.HasPrefix(trimmed, "[") {
 		var ids []string
 		if err := json.Unmarshal(raw, &ids); err != nil {
@@ -56,7 +60,7 @@ func parseSkillsSelection(raw json.RawMessage) (*authv1.SkillSelection, error) {
 		if err != nil {
 			return nil, err
 		}
-		return &authv1.SkillSelection{Ids: norm}, nil
+		return &ssov1.SkillSelection{Ids: norm}, nil
 	}
 
 	// Основной вариант: {"ids":[...]}
@@ -72,7 +76,7 @@ func parseSkillsSelection(raw json.RawMessage) (*authv1.SkillSelection, error) {
 		return nil, err
 	}
 
-	return &authv1.SkillSelection{Ids: norm}, nil
+	return &ssov1.SkillSelection{Ids: norm}, nil
 }
 
 func normalizeSkillIDs(ids []string) ([]string, error) {
@@ -118,4 +122,116 @@ func parseSkillIDsFromQuery(r *http.Request) ([]string, error) {
 	}
 
 	return normalizeSkillIDs(rawIDs)
+}
+
+func parseSkillIDs(q map[string][]string) []string {
+	rawValues := q["skill_ids"]
+	if len(rawValues) == 0 {
+		return nil
+	}
+
+	seen := make(map[string]struct{}, len(rawValues))
+	out := make([]string, 0, len(rawValues))
+
+	for _, raw := range rawValues {
+		for _, part := range strings.Split(raw, ",") {
+			part = strings.TrimSpace(part)
+			if part == "" {
+				continue
+			}
+			if _, ok := seen[part]; ok {
+				continue
+			}
+			seen[part] = struct{}{}
+			out = append(out, part)
+		}
+	}
+
+	return out
+}
+
+func parseOptionalInt32(v string) (int32, error) {
+	v = strings.TrimSpace(v)
+	if v == "" {
+		return 0, nil
+	}
+
+	n, err := strconv.ParseInt(v, 10, 32)
+	if err != nil {
+		return 0, status.Error(codes.InvalidArgument, "page_size must be a valid int32")
+	}
+
+	return int32(n), nil
+}
+
+func parseOptionalBool(v string) (bool, error) {
+	v = strings.TrimSpace(v)
+	if v == "" {
+		return false, nil
+	}
+
+	b, err := strconv.ParseBool(v)
+	if err != nil {
+		return false, status.Error(codes.InvalidArgument, "open_suggestions_only must be a boolean")
+	}
+
+	return b, nil
+}
+
+func parseUserSkillMatchMode(v string) (ssov1.UserSkillMatchMode, error) {
+	switch strings.ToLower(strings.TrimSpace(v)) {
+	case "":
+		return ssov1.UserSkillMatchMode_USER_SKILL_MATCH_MODE_UNSPECIFIED, nil
+	case "any", "user_skill_match_mode_any":
+		return ssov1.UserSkillMatchMode_USER_SKILL_MATCH_MODE_ANY, nil
+	case "all", "user_skill_match_mode_all":
+		return ssov1.UserSkillMatchMode_USER_SKILL_MATCH_MODE_ALL, nil
+	default:
+		return ssov1.UserSkillMatchMode_USER_SKILL_MATCH_MODE_UNSPECIFIED,
+			status.Error(codes.InvalidArgument, "skill_match_mode must be one of: any, all")
+	}
+}
+
+func parsePublicUserSortBy(v string) (ssov1.PublicUserSortBy, error) {
+	switch strings.ToLower(strings.TrimSpace(v)) {
+	case "":
+		return ssov1.PublicUserSortBy_PUBLIC_USER_SORT_BY_UNSPECIFIED, nil
+	case "created_at", "public_user_sort_by_created_at":
+		return ssov1.PublicUserSortBy_PUBLIC_USER_SORT_BY_CREATED_AT, nil
+	case "profile_skill_match_percent", "public_user_sort_by_profile_skill_match_percent":
+		return ssov1.PublicUserSortBy_PUBLIC_USER_SORT_BY_PROFILE_SKILL_MATCH_PERCENT, nil
+	case "matched_skills_count", "public_user_sort_by_matched_skills_count":
+		return ssov1.PublicUserSortBy_PUBLIC_USER_SORT_BY_MATCHED_SKILLS_COUNT, nil
+	default:
+		return ssov1.PublicUserSortBy_PUBLIC_USER_SORT_BY_UNSPECIFIED,
+			status.Error(codes.InvalidArgument, "sort_by must be one of: created_at, profile_skill_match_percent, matched_skills_count")
+	}
+}
+
+func parseSortOrder(v string) (ssov1.SortOrder, error) {
+	switch strings.ToLower(strings.TrimSpace(v)) {
+	case "":
+		return ssov1.SortOrder_SORT_ORDER_UNSPECIFIED, nil
+	case "asc", "sort_order_asc":
+		return ssov1.SortOrder_SORT_ORDER_ASC, nil
+	case "desc", "sort_order_desc":
+		return ssov1.SortOrder_SORT_ORDER_DESC, nil
+	default:
+		return ssov1.SortOrder_SORT_ORDER_UNSPECIFIED,
+			status.Error(codes.InvalidArgument, "sort_order must be one of: asc, desc")
+	}
+}
+
+func parseOptionalTimestamp(v string) (*timestamppb.Timestamp, error) {
+	v = strings.TrimSpace(v)
+	if v == "" {
+		return nil, nil
+	}
+
+	t, err := time.Parse(time.RFC3339, v)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "timestamp must be RFC3339, for example 2026-04-09T12:00:00Z")
+	}
+
+	return timestamppb.New(t), nil
 }
