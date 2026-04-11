@@ -18,10 +18,6 @@ import (
 	"time"
 )
 
-const (
-	maxJSONBodyBytes = int64(1 << 20) // 1 MiB - обычно достаточно для auth/profile
-)
-
 func NewRoutes(log *slog.Logger, authClient authv1.AuthClient, profileClient authv1.UserProfileClient,
 	workspaceTeamsClient workspacev1.TeamsClient, workspaceProjectsClient workspacev1.ProjectsClient, skillClient authv1.SkillsClient) *chi.Mux {
 
@@ -179,6 +175,37 @@ func NewRoutes(log *slog.Logger, authClient authv1.AuthClient, profileClient aut
 
 		r.With(httprate.LimitByIP(20, 1*time.Minute)).
 			Post("/join-requests/{request_id}/cancel", projects.CancelJoinProjectHandler(log, workspaceProjectsClient))
+
+		// Кандидат: мои приглашения
+		r.With(httprate.LimitByIP(60, 1*time.Minute)).
+			Get("/my/invitations", projects.ListMyProjectInvitationsHandler(log, workspaceProjectsClient))
+
+		// Список проектов, куда текущий пользователь может приглашать кандидатов
+		r.With(httprate.LimitByIP(60, 1*time.Minute)).
+			Get("/invitable", projects.ListMyInvitableProjectsHandler(log, workspaceProjectsClient))
+
+		// Действия по конкретному invitation
+		r.With(allowJSON, httprate.LimitByIP(20, 1*time.Minute)).
+			Post("/invitations/{invitation_id}/revoke", projects.RevokeProjectInvitationHandler(log, workspaceProjectsClient))
+
+		r.With(httprate.LimitByIP(20, 1*time.Minute)).
+			Post("/invitations/{invitation_id}/accept", projects.AcceptProjectInvitationHandler(log, workspaceProjectsClient))
+
+		r.With(allowJSON, httprate.LimitByIP(20, 1*time.Minute)).
+			Post("/invitations/{invitation_id}/reject", projects.RejectProjectInvitationHandler(log, workspaceProjectsClient))
+
+		// Проектные invitation-маршруты
+		r.With(allowJSON, httprate.LimitByIP(20, 1*time.Minute)).
+			Post("/{project_id}/invitations", projects.InviteUserToProjectHandler(log, workspaceProjectsClient))
+
+		r.With(httprate.LimitByIP(60, 1*time.Minute)).
+			Get("/{project_id}/invitations", projects.ListProjectInvitationsHandler(log, workspaceProjectsClient))
+
+		r.With(httprate.LimitByIP(60, 1*time.Minute)).
+			Get("/{project_id}/invitations/details", projects.ListProjectInvitationDetailsHandler(log, workspaceProjectsClient))
+
+		r.With(httprate.LimitByIP(60, 1*time.Minute)).
+			Get("/{project_id}/my-invitation", projects.GetMyProjectInvitationHandler(log, workspaceProjectsClient))
 
 		// Project by id
 		r.Route("/{project_id}", func(r chi.Router) {
