@@ -123,7 +123,7 @@ func UpdateMeHandler(log *slog.Logger, c authv1.UserProfileClient) http.HandlerF
 			"Отправляем gRPC-запрос на обновление профиля текущего пользователя",
 			"grpc_method", "UpdateMe",
 			"competence_levels_count", len(req.CompetenceLevels),
-			"skills_count", len(req.Skills.Ids),
+			//"skills_count", len(req.Skills.Ids),
 		)
 
 		resp, err := c.UpdateMe(ctx, req)
