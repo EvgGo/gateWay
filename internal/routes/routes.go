@@ -242,6 +242,9 @@ func NewRoutes(log *slog.Logger, authClient authv1.AuthClient, profileClient aut
 				// rights patch
 				r.With(allowJSON, httprate.LimitByIP(20, 1*time.Minute)).
 					Patch("/{user_id}/rights", projects.UpdateProjectMemberRightsHandler(log, workspaceProjectsClient))
+
+				r.With(httprate.LimitByIP(60, 1*time.Minute)).
+					Get("/details", projects.ListProjectMemberDetailsHandler(log, workspaceProjectsClient))
 			})
 
 			// Join requests

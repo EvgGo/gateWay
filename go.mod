@@ -3,7 +3,7 @@ module gateWay
 go 1.24.2
 
 require (
-	github.com/EvgGo/proto v0.17.0
+	github.com/EvgGo/proto v0.19.0
 	github.com/go-chi/chi/v5 v5.2.4
 	github.com/go-chi/cors v1.2.2
 	github.com/go-chi/httprate v0.15.0
