@@ -1,7 +1,6 @@
 package projects
 
 import (
-	"fmt"
 	"gateWay/internal/helpers"
 	workspacev1 "github.com/EvgGo/proto/proto/gen/go/teamAndProjects"
 	"github.com/go-chi/chi/v5"
@@ -13,11 +12,10 @@ import (
 func GetProjectHandler(log *slog.Logger, c workspacev1.ProjectsClient) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
-
-		projectID := chi.URLParam(r, "project_id")
+		projectID := strings.TrimSpace(chi.URLParam(r, "project_id"))
 		if projectID == "" {
-			parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
-			projectID = parts[len(parts)-1]
+			helpers.WriteAPIError(w, r, http.StatusBadRequest, "project_id is required")
+			return
 		}
 
 		ctx, cancel := helpers.CtxWithOutgoingMeta(r)
@@ -25,11 +23,13 @@ func GetProjectHandler(log *slog.Logger, c workspacev1.ProjectsClient) http.Hand
 
 		ctx = helpers.AppendCommonGRPCMetadata(ctx, r)
 
-		log.Debug(fmt.Sprintf("НА GetProject запрос для проекта %v", projectID))
+		log.Debug("НА GetProject запрос", "projectID", projectID)
 
-		resp, err := c.GetProject(ctx, &workspacev1.GetProjectRequest{ProjectId: projectID})
+		resp, err := c.GetProject(ctx, &workspacev1.GetProjectRequest{
+			ProjectId: projectID,
+		})
 		if err != nil {
-			log.Warn("GetProject failed", "err", err)
+			log.Warn("GetProject failed", "projectID", projectID, "err", err)
 			helpers.WriteGRPCError(w, r, err)
 			return
 		}

@@ -1,7 +1,7 @@
 github.com/BurntSushi/toml v1.2.1 h1:9F2/+DoOYIOksmaJFPw1tGFy1eDnIJXg+UHjuD8lTak=
 github.com/BurntSushi/toml v1.2.1/go.mod h1:CxXYINrC8qIiEnFrOxCa7Jy5BFHlXnUU2pbicEuybxQ=
-github.com/EvgGo/proto v0.19.0 h1:i2bpF3JPjhPtysWA81q4MO+Dqt4DK2cn2nNSkzEVF8M=
-github.com/EvgGo/proto v0.19.0/go.mod h1:A4L6hUd55+vJycZfX2ckgRITl4mdgODzRPXr3cAnpx4=
+github.com/EvgGo/proto v0.19.1 h1:xee69cgnC9IlzM79RMLkFuypidju+RXGUTi2XYm91+c=
+github.com/EvgGo/proto v0.19.1/go.mod h1:A4L6hUd55+vJycZfX2ckgRITl4mdgODzRPXr3cAnpx4=
 github.com/KyleBanks/depth v1.2.1 h1:5h8fQADFrWtarTdtDudMmGsC7GPbOAu6RVB3ffsVFHc=
 github.com/KyleBanks/depth v1.2.1/go.mod h1:jzSb9d0L43HxTQfT+oSA1EEp2q+ne2uh6XgeJcm8brE=
 github.com/agiledragon/gomonkey/v2 v2.3.1 h1:k+UnUY0EMNYUFUAQVETGY9uUTxjMdnUkP0ARyJS1zzs=
