@@ -148,7 +148,22 @@ func NewRoutes(log *slog.Logger, authClient authv1.AuthClient, profileClient aut
 
 				r.With(httprate.LimitByIP(20, 1*time.Minute)).
 					Delete("/{user_id}", teams.RemoveTeamMemberHandler(log, workspaceTeamsClient))
+
+				r.With(httprate.LimitByIP(60, 1*time.Minute)).
+					Get("/details", teams.ListTeamMemberDetailsHandler(log, workspaceTeamsClient))
+
+				r.With(allowJSON, httprate.LimitByIP(30, 1*time.Minute)).
+					Patch("/{user_id}/duties", teams.UpdateTeamMemberDutiesHandler(log, workspaceTeamsClient))
+
+				r.With(allowJSON, httprate.LimitByIP(30, 1*time.Minute)).
+					Patch("/{user_id}/rights", teams.UpdateTeamMemberRightsHandler(log, workspaceTeamsClient))
+
+				r.With(httprate.LimitByIP(60, 1*time.Minute)).
+					Get("/{user_id}/projects/assignment", teams.ListTeamProjectsForAssignmentHandler(log, workspaceTeamsClient))
 			})
+
+			r.With(allowJSON, httprate.LimitByIP(30, 1*time.Minute)).
+				Post("/projects/{project_id}/members/{user_id}/assignment", teams.AssignTeamMemberToProjectHandler(log, workspaceTeamsClient))
 		})
 	})
 

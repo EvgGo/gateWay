@@ -3,6 +3,7 @@ package teams
 import (
 	"fmt"
 	"gateWay/internal/helpers"
+	"gateWay/pkg/utils"
 	"net/http"
 
 	workspacev1 "github.com/EvgGo/proto/proto/gen/go/teamAndProjects"
@@ -35,6 +36,7 @@ func GetTeamHandler(log *slog.Logger, c workspacev1.TeamsClient) http.HandlerFun
 			return
 		}
 
+		utils.PrintReadable(resp)
 		helpers.WriteProtoJSON(w, http.StatusOK, resp)
 	}
 }

@@ -37,6 +37,9 @@ func UpdateProjectMemberRightsHandler(log *slog.Logger, c workspacev1.ProjectsCl
 
 		log.Debug(fmt.Sprintf("НА UpdateProjectMemberRights запрос для проекта %v, участника %v", projectID, userID))
 
+		req.ProjectId = projectID
+		req.UserId = userID
+
 		resp, err := c.UpdateProjectMemberRights(ctx, &req)
 		if err != nil {
 			log.Warn("UpdateProjectMemberRights failed", "err", err)
