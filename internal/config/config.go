@@ -10,17 +10,18 @@ import (
 )
 
 type Config struct {
-	HTTPServer  HTTPServer          `yaml:"http_server"`
-	Env         string              `yaml:"env" env-default:"local"`
-	LogFile     string              `yaml:"log_file" env:"LOG_FILE"`
-	LogLevel    string              `yaml:"log_level" env-default:"local" env:"LOG_LEVEL"`
-	Options     tokenOptions        `yaml:"token_options"`
-	RedisClient *RedisConfig        `yaml:"redis"`
-	Mailer      string              `yaml:"mailersend_api_key" env-required:"true"`
-	Hcaptcha    string              `yaml:"hcaptcha_secret" env-required:"true"`
-	Auth        AuthGRPCConfig      `yaml:"auth" env-required:"true"`
-	WorkSpace   WorkSpaceGRPCConfig `yaml:"work_space" env-required:"true"`
-	DialConfig  DialConfig          `yaml:"dial"`
+	HTTPServer  HTTPServer   `yaml:"http_server"`
+	Env         string       `yaml:"env" env-default:"local"`
+	LogFile     string       `yaml:"log_file" env:"LOG_FILE"`
+	LogLevel    string       `yaml:"log_level" env-default:"local" env:"LOG_LEVEL"`
+	Options     tokenOptions `yaml:"token_options"`
+	RedisClient *RedisConfig `yaml:"redis"`
+	Mailer      string       `yaml:"mailersend_api_key" env-required:"true"`
+	Hcaptcha    string       `yaml:"hcaptcha_secret" env-required:"true"`
+	Auth        GRPCConfig   `yaml:"auth" env-required:"true"`
+	WorkSpace   GRPCConfig   `yaml:"work_space" env-required:"true"`
+	Testing     GRPCConfig   `yaml:"testing" env-required:"true"`
+	DialConfig  DialConfig   `yaml:"dial"`
 }
 
 type tokenOptions struct {
@@ -30,17 +31,6 @@ type tokenOptions struct {
 }
 
 type GRPCConfig struct {
-	Port    int           `yaml:"port"`
-	Timeout time.Duration `yaml:"timeout"`
-}
-
-type AuthGRPCConfig struct {
-	Host    string        `yaml:"host"`
-	Port    int           `yaml:"port"`
-	Timeout time.Duration `yaml:"timeout"`
-}
-
-type WorkSpaceGRPCConfig struct {
 	Host    string        `yaml:"host"`
 	Port    int           `yaml:"port"`
 	Timeout time.Duration `yaml:"timeout"`

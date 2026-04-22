@@ -8,6 +8,7 @@ import (
 	"gateWay/pkg/logger"
 	authv1 "github.com/EvgGo/proto/proto/gen/go/sso"
 	workspacev1 "github.com/EvgGo/proto/proto/gen/go/teamAndProjects"
+	testsv1 "github.com/EvgGo/proto/proto/gen/go/tests"
 	"github.com/joho/godotenv"
 	httpSwagger "github.com/swaggo/http-swagger"
 	"google.golang.org/grpc"
@@ -41,7 +42,13 @@ func main() {
 
 	workspaceConn, err := connection.ConnectWithRetry(ctx, cfg.WorkSpace.Host, cfg.WorkSpace.Port, cfg.DialConfig, l)
 	if err != nil {
-		l.Error("Error on connecting to the AuthProf-service:", err)
+		l.Error("Error on connecting to the TeamAndProjects-service:", err)
+		return
+	}
+
+	testinConn, err := connection.ConnectWithRetry(ctx, cfg.Testing.Host, cfg.Testing.Port, cfg.DialConfig, l)
+	if err != nil {
+		l.Error("Error on connecting to the Test-service:", err)
 		return
 	}
 
@@ -57,8 +64,10 @@ func main() {
 	workspaceTeamsClient := workspacev1.NewTeamsClient(workspaceConn)
 	workspaceProjectsClient := workspacev1.NewProjectsClient(workspaceConn)
 	skillClient := authv1.NewSkillsClient(userServiceConn)
+	testsClient := testsv1.NewAdaptiveTestingClient(testinConn)
 
-	router := routes.NewRoutes(l, authClient, profileClient, workspaceTeamsClient, workspaceProjectsClient, skillClient)
+	router := routes.NewRoutes(l, authClient, profileClient, workspaceTeamsClient, workspaceProjectsClient,
+		skillClient, testsClient)
 	router.HandleFunc("/swagger/*", httpSwagger.Handler(
 		httpSwagger.URL("http://localhost:8082/swagger/doc.json"), //The url pointing to API definition
 	))

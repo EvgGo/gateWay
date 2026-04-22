@@ -40,6 +40,11 @@ work_space:
   port: ${WORK_SPACE_GRPC_PORT}
   timeout: ${WORK_SPACE_GRPC_TIMEOUT}
 
+testing:
+  host: ${TESTING_GRPC_HOST}
+  port: ${TESTING_GRPC_PORT}
+  timeout: ${TESTING_GRPC_TIMEOUT}
+
 dial:
   attempts: ${DIAL_ATTEMPTS}
   per_attempt_timeout: ${DIAL_PER_ATTEMPT_TIMEOUT}
