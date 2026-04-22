@@ -5,9 +5,11 @@ import (
 	"gateWay/internal/handler/profile"
 	"gateWay/internal/handler/projects"
 	"gateWay/internal/handler/teams"
+	"gateWay/internal/handler/tests"
 	"gateWay/internal/helpers"
 	authv1 "github.com/EvgGo/proto/proto/gen/go/sso"
 	workspacev1 "github.com/EvgGo/proto/proto/gen/go/teamAndProjects"
+	ssessmentv1 "github.com/EvgGo/proto/proto/gen/go/tests"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
@@ -19,7 +21,8 @@ import (
 )
 
 func NewRoutes(log *slog.Logger, authClient authv1.AuthClient, profileClient authv1.UserProfileClient,
-	workspaceTeamsClient workspacev1.TeamsClient, workspaceProjectsClient workspacev1.ProjectsClient, skillClient authv1.SkillsClient) *chi.Mux {
+	workspaceTeamsClient workspacev1.TeamsClient, workspaceProjectsClient workspacev1.ProjectsClient, skillClient authv1.SkillsClient,
+	testsClient ssessmentv1.AdaptiveTestingClient) *chi.Mux {
 
 	const requestMaxAge = 300
 
@@ -92,6 +95,13 @@ func NewRoutes(log *slog.Logger, authClient authv1.AuthClient, profileClient aut
 			// Очень полезно: если фронт зациклился, это не даст улететь в тысячи запросов
 			r.With(httprate.LimitByIP(10, 1*time.Minute)).Get("/me", profile.GetMeHandler(log, profileClient))
 			r.With(httprate.LimitByIP(10, 1*time.Minute)).With(allowJSON).Patch("/me", profile.UpdateMeHandler(log, profileClient))
+
+			r.With(httprate.LimitByIP(20, 1*time.Minute)).
+				With(allowJSON).
+				Post("/me/saved-assessment-results", profile.SaveMyAssessmentResultFromAttemptHandler(log, profileClient))
+
+			r.With(httprate.LimitByIP(20, 1*time.Minute)).
+				Delete("/me/saved-assessment-results/{assessment_id}", profile.DeleteMySavedAssessmentResultHandler(log, profileClient))
 		})
 	})
 
@@ -289,6 +299,39 @@ func NewRoutes(log *slog.Logger, authClient authv1.AuthClient, profileClient aut
 		})
 	})
 
+	r.Route("/testing", func(r chi.Router) {
+		r.Route("/subjects", func(r chi.Router) {
+			r.Get("/", tests.ListSubjectsHandler(log, testsClient))
+		})
+
+		r.Route("/subtopics", func(r chi.Router) {
+			r.Get("/", tests.ListSubtopicsHandler(log, testsClient))
+		})
+
+		r.Route("/assessments", func(r chi.Router) {
+			r.Get("/", tests.ListAssessmentsHandler(log, testsClient))
+			r.Get("/{assessment_id}", tests.GetAssessmentHandler(log, testsClient))
+		})
+
+		r.Route("/attempts", func(r chi.Router) {
+			r.Get("/", tests.ListMyAttemptsHandler(log, testsClient))
+
+			r.With(httprate.LimitByIP(10, 1*time.Minute)).
+				Post("/start", tests.StartAttemptHandler(log, testsClient))
+
+			r.Route("/{attempt_id}", func(r chi.Router) {
+				r.Get("/", tests.GetAttemptHandler(log, testsClient))
+				r.Get("/progress", tests.GetAttemptProgressHandler(log, testsClient))
+				r.Get("/next-question", tests.GetNextQuestionHandler(log, testsClient))
+
+				r.With(httprate.LimitByIP(120, 1*time.Minute)).
+					Post("/answers", tests.SubmitAnswerHandler(log, testsClient))
+
+				r.With(httprate.LimitByIP(20, 1*time.Minute)).
+					Post("/finish", tests.FinishAttemptHandler(log, testsClient))
+			})
+		})
+	})
 	return r
 }
 
