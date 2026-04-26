@@ -3,6 +3,7 @@ package tests
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -70,16 +71,20 @@ func parseOptionalBool(raw string, defaultValue bool) (bool, error) {
 }
 
 func parseAssessmentStatus(raw string) (assessmentv1.AssessmentStatus, error) {
+	value := strings.TrimSpace(strings.ToLower(raw))
 
-	switch strings.ToLower(strings.TrimSpace(raw)) {
-	case "", "unspecified", "all":
+	switch value {
+	case "", "unspecified", "assessment_status_unspecified", "0":
 		return assessmentv1.AssessmentStatus_ASSESSMENT_STATUS_UNSPECIFIED, nil
-	case "active":
+
+	case "active", "assessment_status_active", "1":
 		return assessmentv1.AssessmentStatus_ASSESSMENT_STATUS_ACTIVE, nil
-	case "archived":
+
+	case "archived", "assessment_status_archived", "2":
 		return assessmentv1.AssessmentStatus_ASSESSMENT_STATUS_ARCHIVED, nil
+
 	default:
-		return assessmentv1.AssessmentStatus_ASSESSMENT_STATUS_UNSPECIFIED, errors.New("invalid assessment status")
+		return assessmentv1.AssessmentStatus_ASSESSMENT_STATUS_UNSPECIFIED, fmt.Errorf("invalid assessment status")
 	}
 }
 

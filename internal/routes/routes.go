@@ -251,6 +251,14 @@ func NewRoutes(log *slog.Logger, authClient authv1.AuthClient, profileClient aut
 			r.With(allowJSON, httprate.LimitByIP(30, 1*time.Minute)).
 				Post("/open", projects.SetProjectOpenHandler(log, workspaceProjectsClient))
 
+			// Полная замена требований проекта по тестам
+			r.With(allowJSON, httprate.LimitByIP(20, 1*time.Minute)).
+				Put("/assessment-requirements", projects.SetProjectAssessmentRequirementsHandler(log, workspaceProjectsClient))
+
+			// Проверка eligibility перед заявкой на вступление
+			r.With(httprate.LimitByIP(60, 1*time.Minute)).
+				Get("/join-eligibility", projects.GetMyProjectJoinEligibilityHandler(log, workspaceProjectsClient))
+
 			// Members
 			r.Route("/members", func(r chi.Router) {
 				r.With(httprate.LimitByIP(120, 1*time.Minute)).
@@ -311,6 +319,21 @@ func NewRoutes(log *slog.Logger, authClient authv1.AuthClient, profileClient aut
 		r.Route("/assessments", func(r chi.Router) {
 			r.Get("/", tests.ListAssessmentsHandler(log, testsClient))
 			r.Get("/{assessment_id}", tests.GetAssessmentHandler(log, testsClient))
+		})
+
+		r.Route("/custom-assessments", func(r chi.Router) {
+			r.Get("/my", tests.ListMyCustomAssessmentsHandler(log, testsClient))
+
+			r.With(httprate.LimitByIP(20, 1*time.Minute)).
+				Post("/", tests.CreateCustomAssessmentHandler(log, testsClient))
+
+			r.Route("/{assessment_id}", func(r chi.Router) {
+				r.With(httprate.LimitByIP(20, 1*time.Minute)).
+					Put("/", tests.UpdateCustomAssessmentHandler(log, testsClient))
+
+				r.With(httprate.LimitByIP(20, 1*time.Minute)).
+					Post("/archive", tests.ArchiveCustomAssessmentHandler(log, testsClient))
+			})
 		})
 
 		r.Route("/attempts", func(r chi.Router) {
