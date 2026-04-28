@@ -234,6 +234,22 @@ func NewRoutes(log *slog.Logger, authClient authv1.AuthClient, profileClient aut
 
 		r.With(httprate.LimitByIP(60, 1*time.Minute)).
 			Get("/invitations/my/{invitation_id}/details", projects.GetMyProjectInvitationDetailsHandler(log, workspaceProjectsClient))
+
+		// Этапы проекта по stage_id
+		r.Route("/stages/{stage_id}", func(r chi.Router) {
+			r.With(httprate.LimitByIP(120, 1*time.Minute)).
+				Get("/", projects.GetProjectStageHandler(log, workspaceProjectsClient))
+
+			r.With(allowJSON, httprate.LimitByIP(30, 1*time.Minute)).
+				Patch("/", projects.UpdateProjectStageHandler(log, workspaceProjectsClient))
+
+			r.With(httprate.LimitByIP(20, 1*time.Minute)).
+				Delete("/", projects.DeleteProjectStageHandler(log, workspaceProjectsClient))
+
+			r.With(allowJSON, httprate.LimitByIP(20, 1*time.Minute)).
+				Post("/evaluate", projects.EvaluateProjectStageHandler(log, workspaceProjectsClient))
+		})
+
 		// Project by id
 		r.Route("/{project_id}", func(r chi.Router) {
 			// GetProject
@@ -258,6 +274,18 @@ func NewRoutes(log *slog.Logger, authClient authv1.AuthClient, profileClient aut
 			// Проверка eligibility перед заявкой на вступление
 			r.With(httprate.LimitByIP(60, 1*time.Minute)).
 				Get("/join-eligibility", projects.GetMyProjectJoinEligibilityHandler(log, workspaceProjectsClient))
+
+			// Stages
+			r.Route("/stages", func(r chi.Router) {
+				r.With(httprate.LimitByIP(120, 1*time.Minute)).
+					Get("/", projects.ListProjectStagesHandler(log, workspaceProjectsClient))
+
+				r.With(allowJSON, httprate.LimitByIP(20, 1*time.Minute)).
+					Post("/", projects.CreateProjectStageHandler(log, workspaceProjectsClient))
+
+				r.With(allowJSON, httprate.LimitByIP(20, 1*time.Minute)).
+					Post("/reorder", projects.ReorderProjectStagesHandler(log, workspaceProjectsClient))
+			})
 
 			// Members
 			r.Route("/members", func(r chi.Router) {
