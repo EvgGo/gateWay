@@ -22,6 +22,14 @@ func CreateProjectHandler(log *slog.Logger, c workspacev1.ProjectsClient) http.H
 			return
 		}
 
+		log.Debug("Gateway CreateProject: decoded request",
+			"name", req.GetName(),
+			"teamName", req.GetTeamName(),
+			"teamModeString", req.GetTeamMode().String(),
+			"teamModeNumber", int32(req.GetTeamMode()),
+			"skillIds", req.GetSkillIds(),
+		)
+
 		ctx, cancel := helpers.CtxWithOutgoingMeta(r)
 		defer cancel()
 
