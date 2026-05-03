@@ -147,6 +147,9 @@ func NewRoutes(log *slog.Logger, authClient authv1.AuthClient, profileClient aut
 			r.With(httprate.LimitByIP(10, 1*time.Minute)).
 				Delete("/", teams.DeleteTeamHandler(log, workspaceTeamsClient))
 
+			r.With(allowJSON, httprate.LimitByIP(30, 1*time.Minute)).
+				Post("/leave", teams.LeaveTeamHandler(log, workspaceTeamsClient))
+
 			// members
 			r.Route("/members", func(r chi.Router) {
 				r.With(httprate.LimitByIP(120, 1*time.Minute)).
@@ -266,6 +269,9 @@ func NewRoutes(log *slog.Logger, authClient authv1.AuthClient, profileClient aut
 
 			r.With(allowJSON, httprate.LimitByIP(30, 1*time.Minute)).
 				Post("/open", projects.SetProjectOpenHandler(log, workspaceProjectsClient))
+
+			r.With(allowJSON, httprate.LimitByIP(30, 1*time.Minute)).
+				Post("/leave", projects.LeaveProjectHandler(log, workspaceProjectsClient))
 
 			// Полная замена требований проекта по тестам
 			r.With(allowJSON, httprate.LimitByIP(20, 1*time.Minute)).
