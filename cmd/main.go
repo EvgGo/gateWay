@@ -9,7 +9,6 @@ import (
 	authv1 "github.com/EvgGo/proto/proto/gen/go/sso"
 	workspacev1 "github.com/EvgGo/proto/proto/gen/go/teamAndProjects"
 	testsv1 "github.com/EvgGo/proto/proto/gen/go/tests"
-	"github.com/joho/godotenv"
 	httpSwagger "github.com/swaggo/http-swagger"
 	"google.golang.org/grpc"
 	"log"
@@ -19,10 +18,10 @@ import (
 
 func main() {
 
-	if err := godotenv.Load(".env"); err != nil {
-		log.Println("Внимание: файл .env не найден, используются переменные окружения по умолчанию")
-		panic(err)
-	}
+	//if err := godotenv.Load(".env"); err != nil {
+	//	log.Println("Внимание: файл .env не найден, используются переменные окружения по умолчанию")
+	//	panic(err)
+	//}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
